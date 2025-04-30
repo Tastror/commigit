@@ -3,7 +3,7 @@ use eframe::egui;
 fn main() -> Result<(), eframe::Error> {
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
-            .with_inner_size([600.0, 500.0])
+            .with_inner_size([350.0, 500.0])
             .with_title("Git Commit Message Generator"),
         ..Default::default()
     };
@@ -98,7 +98,7 @@ impl eframe::App for CommitMessageGenerator {
             ui.horizontal(|ui| {
                 ui.checkbox(
                     &mut self.use_deprecations,
-                    "Contains DEPRECATIONS",
+                    "Contains DEPRECATION",
                 );
                 if self.use_deprecations {
                     let deprecations = egui::TextEdit::singleline(&mut self.deprecations)
@@ -169,9 +169,9 @@ impl CommitMessageGenerator {
             msg.push_str(&self.breaking_change);
         }
 
-        // Breaking change
+        // Deprecation
         if self.use_deprecations && !self.deprecations.is_empty() {
-            msg.push_str("\nDEPRECATIONS: ");
+            msg.push_str("\nDEPRECATION: ");
             msg.push_str(&self.deprecations);
         }
 
