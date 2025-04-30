@@ -21,7 +21,10 @@ struct CommitMessageGenerator {
     scope: String,
     subject: String,
     body: String,
+    use_breaking: bool,
     breaking_change: String,
+    use_deprecations: bool,
+    deprecations: String,
     refs: String,
     copied_time: Option<f64>,
 }
@@ -39,7 +42,8 @@ impl eframe::App for CommitMessageGenerator {
                     .selected_text(if self.commit_type.is_empty() {
                         "Select type".to_owned()
                     } else {
-                        format!("{} - {}", self.commit_type, get_type_description(&self.commit_type))
+                        // format!("{} - {}", self.commit_type, get_type_description(&self.commit_type))
+                        format!("{}", self.commit_type)
                     })
                     .width(100.0)
                     .show_ui(ui, |ui| {
@@ -79,13 +83,27 @@ impl eframe::App for CommitMessageGenerator {
             ui.add_space(10.0);
             ui.horizontal(|ui| {
                 ui.checkbox(
-                    &mut !self.breaking_change.is_empty(),
+                    &mut self.use_breaking,
                     "Contains BREAKING CHANGE",
                 );
-                if !self.breaking_change.is_empty() {
+                if self.use_breaking {
                     let breaking_change = egui::TextEdit::singleline(&mut self.breaking_change)
                         .hint_text("Describe breaking changes");
                     ui.add(breaking_change);
+                }
+            });
+
+            // deprecations
+            ui.add_space(10.0);
+            ui.horizontal(|ui| {
+                ui.checkbox(
+                    &mut self.use_deprecations,
+                    "Contains DEPRECATIONS",
+                );
+                if self.use_deprecations {
+                    let deprecations = egui::TextEdit::singleline(&mut self.deprecations)
+                        .hint_text("Describe deprecations");
+                    ui.add(deprecations);
                 }
             });
 
@@ -139,15 +157,27 @@ impl CommitMessageGenerator {
             msg.push_str(&self.body);
         }
 
+        if (self.use_breaking && !self.breaking_change.is_empty()) ||
+            (self.use_deprecations && !self.deprecations.is_empty()) ||
+            !self.refs.is_empty() {
+            msg.push_str("\n");
+        }
+
         // Breaking change
-        if !self.breaking_change.is_empty() {
-            msg.push_str("\n\nBREAKING CHANGE: ");
+        if self.use_breaking && !self.breaking_change.is_empty() {
+            msg.push_str("\nBREAKING CHANGE: ");
             msg.push_str(&self.breaking_change);
+        }
+
+        // Breaking change
+        if self.use_deprecations && !self.deprecations.is_empty() {
+            msg.push_str("\nDEPRECATIONS: ");
+            msg.push_str(&self.deprecations);
         }
 
         // References
         if !self.refs.is_empty() {
-            msg.push_str("\n\nRefs: ");
+            msg.push_str("\nRefs: ");
             msg.push_str(&self.refs);
         }
 
@@ -173,10 +203,10 @@ fn get_commit_types() -> Vec<(&'static str, &'static str)> {
     ]
 }
 
-fn get_type_description(typ: &str) -> &'static str {
-    get_commit_types()
-        .iter()
-        .find(|(t, _)| *t == typ)
-        .map(|(_, d)| *d)
-        .unwrap_or("Select a commit type")
-}
+// fn get_type_description(typ: &str) -> &'static str {
+//     get_commit_types()
+//         .iter()
+//         .find(|(t, _)| *t == typ)
+//         .map(|(_, d)| *d)
+//         .unwrap_or("Select a commit type")
+// }
